@@ -1,0 +1,679 @@
+/**
+ * 微信小游戏主文件
+ * 使用Canvas UI管理系统
+ */
+
+// 游戏主类
+class Game {
+    constructor() {
+        this.manager = null;
+        this.gameState = 'loading'; // loading, menu, playing, paused, gameover
+        this.score = 0;
+        this.isInitialized = false;
+    }
+    
+    /**
+     * 初始化游戏
+     */
+    init() {
+        console.log('游戏初始化开始...');
+        
+        // 初始化游戏管理器
+        this.manager = window.gameManager || new GameManager();
+        
+        // 设置Canvas尺寸
+        this.setupCanvas();
+        
+        // 初始化游戏状态
+        this.initGameState();
+        
+        // 设置资源加载回调
+        this.manager.onLoadingProgress = (progress) => {
+            this.updateLoadingScreen(progress);
+        };
+        
+        this.manager.onResourcesLoaded = () => {
+            this.onResourcesLoaded();
+        };
+        
+        // 开始加载资源
+        this.manager.init('#gameCanvas');
+        
+        this.isInitialized = true;
+        console.log('游戏初始化完成');
+    }
+    
+    /**
+     * 设置Canvas尺寸
+     */
+    setupCanvas() {
+        // 获取系统信息
+        const systemInfo = wx.getSystemInfoSync();
+        
+        // 设置Canvas尺寸为全屏
+        const canvas = this.manager?.canvas;
+        if (canvas) {
+            canvas.width = systemInfo.windowWidth;
+            canvas.height = systemInfo.windowHeight;
+            
+            console.log(`Canvas尺寸: ${canvas.width}x${canvas.height}`);
+            console.log(`设备信息: ${systemInfo.brand} ${systemInfo.model}`);
+            console.log(`系统: ${systemInfo.system}, 平台: ${systemInfo.platform}`);
+        }
+    }
+    
+    /**
+     * 初始化游戏状态
+     */
+    initGameState() {
+        this.gameState = 'loading';
+        this.score = 0;
+        
+        // 从存储加载游戏数据
+        try {
+            const savedData = wx.getStorageSync('gameData');
+            if (savedData) {
+                this.highScore = savedData.highScore || 0;
+                this.soundEnabled = savedData.soundEnabled !== false;
+                console.log('加载游戏数据:', savedData);
+            }
+        } catch (err) {
+            console.log('无保存数据，使用默认值');
+            this.highScore = 0;
+            this.soundEnabled = true;
+        }
+    }
+    
+    /**
+     * 更新加载屏幕
+     * @param {number} progress - 加载进度(0-100)
+     */
+    updateLoadingScreen(progress) {
+        const ctx = this.manager?.ctx;
+        const canvas = this.manager?.canvas;
+        
+        if (!ctx || !canvas) return;
+        
+        // 清空画布
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // 绘制加载背景
+        ctx.fillStyle = '#1A1A2E';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // 绘制加载文字
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('加载游戏中...', canvas.width / 2, canvas.height / 2 - 50);
+        
+        // 绘制进度条背景
+        const barWidth = canvas.width * 0.6;
+        const barHeight = 20;
+        const barX = (canvas.width - barWidth) / 2;
+        const barY = canvas.height / 2;
+        
+        ctx.fillStyle = '#333344';
+        ctx.fillRect(barX, barY, barWidth, barHeight);
+        
+        // 绘制进度条前景
+        const progressWidth = (barWidth * progress) / 100;
+        ctx.fillStyle = '#4A90E2';
+        ctx.fillRect(barX, barY, progressWidth, barHeight);
+        
+        // 绘制进度文字
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '18px Arial';
+        ctx.fillText(`${progress}%`, canvas.width / 2, barY + barHeight + 30);
+        
+        // 绘制小提示
+        const tips = [
+            '正在加载资源...',
+            '优化游戏体验...',
+            '准备开始游戏...',
+            '请稍候...'
+        ];
+        const tipIndex = Math.floor(progress / 25);
+        ctx.fillStyle = '#888888';
+        ctx.font = '16px Arial';
+        ctx.fillText(tips[tipIndex] || tips[0], canvas.width / 2, barY + barHeight + 60);
+    }
+    
+    /**
+     * 资源加载完成回调
+     */
+    onResourcesLoaded() {
+        console.log('游戏资源加载完成，显示主菜单');
+        this.gameState = 'menu';
+        this.showMainMenu();
+    }
+    
+    /**
+     * 显示主菜单
+     */
+    showMainMenu() {
+        const ctx = this.manager?.ctx;
+        const canvas = this.manager?.canvas;
+        
+        if (!ctx || !canvas) return;
+        
+        // 清空画布
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // 绘制背景
+        this.manager.drawImage('bg_home', 0, 0, canvas.width, canvas.height);
+        
+        // 绘制游戏标题
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 48px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // 文字阴影
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        
+        ctx.fillText('我的小游戏', canvas.width / 2, canvas.height * 0.2);
+        
+        // 重置阴影
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        
+        // 绘制开始按钮
+        const btnWidth = 200;
+        const btnHeight = 80;
+        const btnX = (canvas.width - btnWidth) / 2;
+        const btnY = canvas.height * 0.5;
+        
+        this.manager.drawImage('btn_play', btnX, btnY, btnWidth, btnHeight);
+        
+        // 绘制按钮文字
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 28px Arial';
+        ctx.fillText('开始游戏', canvas.width / 2, btnY + btnHeight / 2);
+        
+        // 绘制设置按钮
+        const settingsSize = 50;
+        const settingsX = canvas.width - settingsSize - 20;
+        const settingsY = 20;
+        
+        this.manager.drawImage('btn_settings', settingsX, settingsY, settingsSize, settingsSize);
+        
+        // 绘制最高分
+        ctx.fillStyle = '#FFD93D';
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`最高分: ${this.highScore}`, canvas.width / 2, canvas.height * 0.7);
+        
+        // 设置按钮事件
+        this.setupMenuEvents(btnX, btnY, btnWidth, btnHeight, settingsX, settingsY, settingsSize);
+    }
+    
+    /**
+     * 设置菜单事件
+     */
+    setupMenuEvents(playBtnX, playBtnY, playBtnW, playBtnH, settingsX, settingsY, settingsSize) {
+        // 移除之前的监听器
+        wx.offTouchStart();
+        
+        // 开始按钮点击
+        wx.onTouchStart((e) => {
+            const touch = e.touches[0];
+            if (!touch) return;
+            
+            const x = touch.clientX;
+            const y = touch.clientY;
+            
+            // 检查开始按钮
+            if (x >= playBtnX && x <= playBtnX + playBtnW &&
+                y >= playBtnY && y <= playBtnY + playBtnH) {
+                this.startGame();
+            }
+            
+            // 检查设置按钮
+            if (x >= settingsX && x <= settingsX + settingsSize &&
+                y >= settingsY && y <= settingsY + settingsSize) {
+                this.showSettings();
+            }
+        });
+    }
+    
+    /**
+     * 开始游戏
+     */
+    startGame() {
+        console.log('游戏开始');
+        this.gameState = 'playing';
+        this.score = 0;
+        
+        // 清空画布
+        const ctx = this.manager?.ctx;
+        const canvas = this.manager?.canvas;
+        
+        if (!ctx || !canvas) return;
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // 绘制游戏背景
+        this.manager.drawImage('bg_game', 0, 0, canvas.width, canvas.height);
+        
+        // 绘制HUD
+        this.drawHUD();
+        
+        // 开始游戏循环
+        this.gameLoop();
+    }
+    
+    /**
+     * 绘制HUD（游戏界面UI）
+     */
+    drawHUD() {
+        const ctx = this.manager?.ctx;
+        const canvas = this.manager?.canvas;
+        
+        if (!ctx || !canvas) return;
+        
+        // 绘制分数
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 32px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText(`分数: ${this.score}`, 20, 40);
+        
+        // 绘制暂停按钮
+        const pauseSize = 40;
+        const pauseX = canvas.width - pauseSize - 10;
+        const pauseY = 10;
+        
+        this.manager.drawImage('btn_pause', pauseX, pauseY, pauseSize, pauseSize);
+        
+        // 设置暂停按钮事件
+        wx.onTouchStart((e) => {
+            const touch = e.touches[0];
+            if (touch &&
+                touch.clientX >= pauseX && touch.clientX <= pauseX + pauseSize &&
+                touch.clientY >= pauseY && touch.clientY <= pauseY + pauseSize) {
+                this.pauseGame();
+            }
+        });
+    }
+    
+    /**
+     * 游戏主循环
+     */
+    gameLoop() {
+        if (this.gameState !== 'playing') return;
+        
+        const ctx = this.manager?.ctx;
+        const canvas = this.manager?.canvas;
+        
+        if (!ctx || !canvas) return;
+        
+        // 清空画布（部分清空，优化性能）
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // 绘制游戏背景
+        this.manager.drawImage('bg_game', 0, 0, canvas.width, canvas.height);
+        
+        // 更新游戏逻辑
+        this.updateGame();
+        
+        // 绘制游戏元素
+        this.drawGame();
+        
+        // 绘制HUD
+        this.drawHUD();
+        
+        // 请求下一帧
+        requestAnimationFrame(() => this.gameLoop());
+    }
+    
+    /**
+     * 更新游戏逻辑
+     */
+    updateGame() {
+        // 这里添加游戏逻辑更新
+        // 例如：更新玩家位置、检测碰撞、生成敌人等
+        
+        // 模拟分数增加
+        this.score += 1;
+        
+        // 检查游戏结束条件
+        // if (this.isGameOver()) {
+        //     this.gameOver();
+        // }
+    }
+    
+    /**
+     * 绘制游戏元素
+     */
+    drawGame() {
+        const ctx = this.manager?.ctx;
+        
+        if (!ctx) return;
+        
+        // 这里绘制游戏中的角色、敌人、道具等
+        // 例如：绘制玩家
+        const playerImg = this.manager.getResource('player');
+        if (playerImg && playerImg.image) {
+            const playerX = 100;
+            const playerY = 300;
+            const playerSize = 100;
+            
+            ctx.drawImage(playerImg.image, playerX, playerY, playerSize, playerSize);
+        }
+        
+        // 绘制金币
+        const coinImg = this.manager.getResource('icon_coin');
+        if (coinImg && coinImg.image) {
+            const coinX = 200;
+            const coinY = 200;
+            const coinSize = 40;
+            
+            ctx.drawImage(coinImg.image, coinX, coinY, coinSize, coinSize);
+            
+            // 金币旋转动画
+            ctx.save();
+            ctx.translate(coinX + coinSize / 2, coinY + coinSize / 2);
+            const rotation = (Date.now() / 1000) * 180; // 每秒180度
+            ctx.rotate(rotation * Math.PI / 180);
+            ctx.drawImage(coinImg.image, -coinSize / 2, -coinSize / 2, coinSize, coinSize);
+            ctx.restore();
+        }
+    }
+    
+    /**
+     * 暂停游戏
+     */
+    pauseGame() {
+        console.log('游戏暂停');
+        this.gameState = 'paused';
+        
+        // 显示暂停菜单
+        this.showPauseMenu();
+    }
+    
+    /**
+     * 显示暂停菜单
+     */
+    showPauseMenu() {
+        const ctx = this.manager?.ctx;
+        const canvas = this.manager?.canvas;
+        
+        if (!ctx || !canvas) return;
+        
+        // 绘制半透明遮罩
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // 绘制暂停菜单框
+        const menuWidth = 300;
+        const menuHeight = 400;
+        const menuX = (canvas.width - menuWidth) / 2;
+        const menuY = (canvas.height - menuHeight) / 2;
+        
+        // 绘制菜单背景
+        ctx.fillStyle = '#2C3E50';
+        ctx.fillRect(menuX, menuY, menuWidth, menuHeight);
+        
+        // 圆角
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#4A90E2';
+        ctx.strokeRect(menuX, menuY, menuWidth, menuHeight);
+        
+        // 绘制标题
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 36px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('游戏暂停', canvas.width / 2, menuY + 60);
+        
+        // 绘制当前分数
+        ctx.font = '24px Arial';
+        ctx.fillText(`当前分数: ${this.score}`, canvas.width / 2, menuY + 120);
+        
+        // 绘制最高分
+        ctx.fillText(`最高分: ${this.highScore}`, canvas.width / 2, menuY + 160);
+        
+        // 绘制继续按钮
+        const continueBtnY = menuY + 220;
+        this.drawButton('继续游戏', canvas.width / 2, continueBtnY, 200, 50, '#4CAF50', () => {
+            this.resumeGame();
+        });
+        
+        // 绘制重新开始按钮
+        const restartBtnY = continueBtnY + 70;
+        this.drawButton('重新开始', canvas.width / 2, restartBtnY, 200, 50, '#FF9800', () => {
+            this.restartGame();
+        });
+        
+        // 绘制返回主菜单按钮
+        const menuBtnY = restartBtnY + 70;
+        this.drawButton('主菜单', canvas.width / 2, menuBtnY, 200, 50, '#2196F3', () => {
+            this.returnToMenu();
+        });
+    }
+    
+    /**
+     * 绘制按钮
+     */
+    drawButton(text, x, y, width, height, color, onClick) {
+        const ctx = this.manager?.ctx;
+        
+        if (!ctx) return;
+        
+        // 按钮背景
+        ctx.fillStyle = color;
+        ctx.fillRect(x - width / 2, y - height / 2, width, height);
+        
+        // 按钮边框
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x - width / 2, y - height / 2, width, height);
+        
+        // 按钮文字
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, x, y);
+        
+        // 按钮点击效果
+        wx.onTouchStart((e) => {
+            const touch = e.touches[0];
+            if (touch &&
+                touch.clientX >= x - width / 2 && touch.clientX <= x + width / 2 &&
+                touch.clientY >= y - height / 2 && touch.clientY <= y + height / 2) {
+                // 按钮点击效果
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.fillRect(x - width / 2, y - height / 2, width, height);
+                
+                // 执行回调
+                setTimeout(() => {
+                    onClick?.();
+                }, 100);
+            }
+        });
+    }
+    
+    /**
+     * 继续游戏
+     */
+    resumeGame() {
+        console.log('继续游戏');
+        this.gameState = 'playing';
+        this.gameLoop();
+    }
+    
+    /**
+     * 重新开始游戏
+     */
+    restartGame() {
+        console.log('重新开始游戏');
+        this.score = 0;
+        this.gameState = 'playing';
+        this.gameLoop();
+    }
+    
+    /**
+     * 返回主菜单
+     */
+    returnToMenu() {
+        console.log('返回主菜单');
+        this.gameState = 'menu';
+        this.showMainMenu();
+    }
+    
+    /**
+     * 显示设置界面
+     */
+    showSettings() {
+        console.log('显示设置');
+        // 这里可以添加设置界面逻辑
+        alert('设置功能开发中...');
+    }
+    
+    /**
+     * 游戏结束
+     */
+    gameOver() {
+        console.log('游戏结束');
+        this.gameState = 'gameover';
+        
+        // 更新最高分
+        if (this.score > this.highScore) {
+            this.highScore = this.score;
+            
+            // 保存到本地存储
+            try {
+                wx.setStorageSync('gameData', {
+                    highScore: this.highScore,
+                    soundEnabled: this.soundEnabled
+                });
+            } catch (err) {
+                console.error('保存数据失败:', err);
+            }
+        }
+        
+        // 显示游戏结束界面
+        this.showGameOver();
+    }
+    
+    /**
+     * 显示游戏结束界面
+     */
+    showGameOver() {
+        const ctx = this.manager?.ctx;
+        const canvas = this.manager?.canvas;
+        
+        if (!ctx || !canvas) return;
+        
+        // 清空画布
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // 绘制背景
+        this.manager.drawImage('bg_home', 0, 0, canvas.width, canvas.height);
+        
+        // 绘制游戏结束文字
+        ctx.fillStyle = '#FF6B6B';
+        ctx.font = 'bold 48px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('游戏结束', canvas.width / 2, canvas.height * 0.3);
+        
+        // 绘制分数
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '36px Arial';
+        ctx.fillText(`本次得分: ${this.score}`, canvas.width / 2, canvas.height * 0.4);
+        ctx.fillText(`最高分: ${this.highScore}`, canvas.width / 2, canvas.height * 0.5);
+        
+        // 绘制重新开始按钮
+        const btnWidth = 200;
+        const btnHeight = 60;
+        const btnX = (canvas.width - btnWidth) / 2;
+        const btnY = canvas.height * 0.65;
+        
+        this.manager.drawImage('btn_restart', btnX, btnY, btnWidth, btnHeight);
+        
+        // 绘制按钮文字
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 24px Arial';
+        ctx.fillText('重新开始', canvas.width / 2, btnY + btnHeight / 2);
+        
+        // 设置按钮事件
+        wx.onTouchStart((e) => {
+            const touch = e.touches[0];
+            if (touch &&
+                touch.clientX >= btnX && touch.clientX <= btnX + btnWidth &&
+                touch.clientY >= btnY && touch.clientY <= btnY + btnHeight) {
+                this.restartGame();
+            }
+        });
+    }
+}
+
+// 创建游戏实例并启动
+const game = new Game();
+
+// 微信小游戏启动函数
+function onLaunch() {
+    console.log('微信小游戏启动');
+    game.init();
+}
+
+// 导出函数供微信调用
+window.onLaunch = onLaunch;
+window.game = game;
+
+// 测试函数
+function testGame() {
+    console.log('=== 测试游戏功能 ===');
+    
+    // 模拟微信环境
+    if (typeof wx === 'undefined') {
+        global.wx = {
+            getSystemInfoSync: () => ({
+                windowWidth: 375,
+                windowHeight: 667,
+                brand: '测试设备',
+                model: '测试模型',
+                system: 'iOS 10.0.1',
+                platform: 'ios'
+            }),
+            getStorageSync: (key) => {
+                console.log(`读取存储: ${key}`);
+                return null;
+            },
+            setStorageSync: (key, data) => {
+                console.log(`保存存储: ${key}`, data);
+            },
+            onTouchStart: (callback) => {
+                console.log('触摸事件监听已设置');
+            },
+            offTouchStart: () => {
+                console.log('触摸事件监听已移除');
+            }
+        };
+    }
+    
+    // 测试游戏初始化
+    game.init();
+    
+    // 模拟资源加载完成
+    setTimeout(() => {
+        console.log('模拟资源加载完成');
+        if (game.manager && game.manager.onResourcesLoaded) {
+            game.manager.onResourcesLoaded();
+        }
+    }, 1000);
+    
+    return game;
+}
+
+// 如果是Node环境，运行测试
+if (typeof module !== 'undefined' && module.exports) {
+    const testResult = testGame();
+    module.exports = { Game, game, onLaunch };
+}
