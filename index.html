@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>爱的小屋 | 我们的温馨家园</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial Rounded MT Bold', 'Segoe UI', sans-serif;
+        }
+        
+        :root {
+            --primary: #ff7eb3;
+            --secondary: #7bdff2;
+            --accent: #ffd166;
+            --light: #fff9f2;
+            --dark: #5a5353;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #fff8f0 0%, #ffecf1 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* 手绘背景元素 */
+        .bg-heart {
+            position: fixed;
+            opacity: 0.1;
+            z-index: -1;
+        }
+        
+        .heart1 { top: 10%; left: 5%; width: 60px; height: 60px; background: var(--primary); transform: rotate(45deg); }
+        .heart1:before, .heart1:after { content: ''; position: absolute; width: 60px; height: 60px; border-radius: 50%; background: var(--primary); }
+        .heart1:before { top: -30px; left: 0; }
+        .heart1:after { top: 0; left: -30px; }
+        
+        .heart2 { bottom: 15%; right: 8%; width: 40px; height: 40px; background: var(--secondary); transform: rotate(45deg); }
+        .heart2:before, .heart2:after { content: ''; position: absolute; width: 40px; height: 40px; border-radius: 50%; background: var(--secondary); }
+        .heart2:before { top: -20px; left: 0; }
+        .heart2:after { top: 0; left: -20px; }
+        
+        /* 小屋标题 */
+        .cottage-header {
+            text-align: center;
+            margin: 20px 0 40px;
+            position: relative;
+        }
+        
+        .title-box {
+            display: inline-block;
+            background: white;
+            padding: 25px 50px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(255, 126, 179, 0.2);
+            border: 4px dashed var(--primary);
+            position: relative;
+            max-width: 90%;
+        }
+        
+        .title-box h1 {
+            color: var(--primary);
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 0 rgba(255, 126, 179, 0.1);
+        }
+        
+        .title-box p {
+            color: var(--dark);
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+        
+        /* 主内容区 */
+        .main-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* 小屋模块通用样式 */
+        .cottage-module {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            border: 3px solid;
+            position: relative;
+            overflow: hidden;
+            min-height: 300px;
+        }
+        
+        .message-wall { border-color: #ff7eb3; }
+        .photo-wall { border-color: #7bdff2; }
+        .decorations { border-color: #ffd166; }
+        .diy-tools { border-color: #9d4edd; }
+        
+        .module-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px dotted;
+        }
+        
+        .message-wall .module-header { border-color: #ff7eb3; }
+        .photo-wall .module-header { border-color: #7bdff2; }
+        .decorations .module-header { border-color: #ffd166; }
+        .diy-tools .module-header { border-color: #9d4edd; }
+        
+        .module-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-right: 15px;
+        }
+        
+        .message-wall .module-icon { background: #ff7eb3; color: white; }
+        .photo-wall .module-icon { background: #7bdff2; color: white; }
+        .decorations .module-icon { background: #ffd166; color: #5a5353; }
+        .diy-tools .module-icon { background: #9d4edd; color: white; }
+        
+        .module-header h2 {
+            color: var(--dark);
+            font-size: 1.8rem;
+        }
+        
+        /* 留言墙 */
+        .message-list {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .message-item {
+            background: #fff5f8;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 15px;
+            border-left: 5px solid #ff7eb3;
+        }
+        
+        .message-author {
+            font-weight: bold;
+            color: #ff7eb3;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .message-content {
+            color: var(--dark);
+            line-height: 1.5;
+        }
+        
+        .message-form {
+            margin-top: 20px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ffccd5;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: #fff9fb;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #ff7eb3;
+            box-shadow: 0 0 0 3px rgba(255, 126, 179, 0.2);
+        }
+        
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 126, 179, 0.3);
+        }
+        
+        /* 照片墙 */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .photo-item {
+            width: 100%;
+            height: 100px;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .photo-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .upload-area {
+            border: 2px dashed #7bdff2;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            background: #f0faff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-area:hover {
+            background: #e0f7ff;
+            border-color: var(--secondary);
+        }
+        
+        /* 小屋装饰 */
+        .decorations-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        
+        .decoration-item {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #fff8e6;
+            border: 2px solid #ffeaa7;
+        }
+        
+        .decoration-item:hover {
+            transform: scale(1.1);
+            background: #fff3cd;
+        }
+        
+        .decoration-item.selected {
+            background: #ffd166;
+            border-color: #ffb700;
+        }
+        
+        /* DIY工具 */
+        .tools-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .tool-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f0ff;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid #e6d4ff;
+        }
+        
+        .tool-item:hover {
+            transform: translateX(5px);
+            background: #f0e6ff;
+        }
+        
+        .tool-icon {
+            width: 50px;
+            height: 50px;
+            background: #9d4edd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin-right: 15px;
+        }
+        
+        /* 页脚 */
+        .cottage-footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 30px;
+            color: var(--dark);
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .title-box h1 {
+                font-size: 2.2rem;
+            }
+            
+            .photo-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .decorations-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff5c9d;
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景装饰 -->
+    <div class="bg-heart heart1"></div>
+    <div class="bg-heart heart2"></div>
+    
+    <!-- 小屋标题 -->
+    <header class="cottage-header">
+        <div class="title-box">
+            <h1>💕 爱的小屋</h1>
+            <p>记录我们的每一个温暖瞬间 | 袁湘琴 & 江直树</p>
+        </div>
+    </header>
+    
+    <!-- 主内容区 -->
+    <main class="main-container">
+        <!-- 留言墙 -->
+        <section class="cottage-module message-wall">
+            <div class="module-header">
+                <div class="module-icon">💌</div>
+                <h2>留言墙</h2>
+            </div>
+            <div class="message-list" id="messageList">
+                <!-- 留言将通过JavaScript动态添加 -->
+            </div>
+            <form class="message-form" id="messageForm">
+                <input type="text" class="form-input" id="authorName" placeholder="你的名字" required>
+                <textarea class="form-input" id="messageContent" rows="3" placeholder="写下想对我们说的话..." required></textarea>
+                <button type="submit" class="btn">发布留言 ✨</button>
+            </form>
+        </section>
+        
+        <!-- 照片墙 -->
+        <section class="cottage-module photo-wall">
+            <div class="module-header">
+                <div class="module-icon">📸</div>
+                <h2>照片墙</h2>
+            </div>
+            <div class="photo-grid" id="photoGrid">
+                <!-- 照片将通过JavaScript动态添加 -->
+            </div>
+            <div class="upload-area" id="uploadArea">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: #7bdff2; margin-bottom: 10px;"></i>
+                <p>点击或拖拽上传照片</p>
+                <input type="file" id="photoUpload" accept="image/*" multiple style="display: none;">
+            </div>
+        </section>
+        
+        <!-- 小屋装饰 -->
+        <section class="cottage-module decorations">
+            <div class="module-header">
+                <div class="module-icon">🏠</div>
+                <h2>小屋装饰</h2>
+            </div>
+            <p style="color: var(--dark); margin-bottom: 15px;">点击装饰挂件装饰我们的小屋</p>
+            <div class="decorations-container" id="decorationsContainer">
+                <!-- 装饰物将通过JavaScript动态添加 -->
+            </div>
+        </section>
+        
+        <!-- DIY工具 -->
+        <section class="cottage-module diy-tools">
+            <div class="module-header">
+                <div class="module-icon">🔧</div>
+                <h2>DIY工具</h2>
+            </div>
+            <div class="tools-container">
+                <div class="tool-item" onclick="changeBackground()">
+                    <div class="tool-icon">🎨</div>
+                    <div>
+                        <h3>更换背景</h3>
+                        <p>选择小屋主题颜色</p>
+                    </div>
+                </div>
+                <div class="tool-item" onclick="addSticker()">
+                    <div class="tool-icon">✨</div>
+                    <div>
+                        <h3>添加贴纸</h3>
+                        <p>添加可爱贴纸装饰</p>
+                    </div>
+                </div>
+                <div class="tool-item" onclick="saveCottage()">
+                    <div class="tool-icon">💾</div>
+                    <div>
+                        <h3>保存小屋</h3>
+                        <p>导出当前布局图片</p>
+                    </div>
+                </div>
+                <div class="tool-item" onclick="resetCottage()">
+                    <div class="tool-icon">🔄</div>
+                    <div>
+                        <h3>重置小屋</h3>
+                        <p>恢复初始状态</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- 页脚 -->
+    <footer class="cottage-footer">
+        <p style="font-size: 1.1rem; margin-bottom: 10px;">❤️ 爱的小屋 v2.0 | 用心记录每一份美好 ❤️</p>
+        <p style="opacity: 0.7;">© 2026 我们的专属空间 | 设计灵感来自《恶作剧之吻》</p>
+    </footer>
+
+    <script>
+        // 初始化数据
+        const initialMessages = [
+            { author: "湘琴", content: "直树，今天是我们在一起的第1000天！感谢你一直陪在我身边~", time: "今天 10:30" },
+            { author: "直树", content: "笨蛋湘琴，虽然你总是迷迷糊糊的，但这就是我喜欢的你。", time: "今天 11:15" },
+            { author: "阿金", content: "来参观你们的小屋啦！布置得好温馨，祝你们永远幸福！", time: "昨天 14:20" },
+            { author: "好美", content: "小屋太可爱了！我也要做一个这样的网站记录生活！", time: "前天 16:45" }
+        ];
+        
+        const initialPhotos = [
+            "❤️", "🌸", "⭐", "🎀", "🐱", "🐶", 
+            "🎁", "🎈", "💕", "✨", "🦄", "🍦"
+        ];
+        
+        const decorations = [
+            "❤️", "💕", "✨", "🌟", "🌸", "🌺",
+            "🐰", "🐱", "🐶", "🦊", "🐻", "🐼",
+            "🍩", "🍰", "🍦", "☕", "📚", "🎵"
+        ];
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化留言墙
+            const messageList = document.getElementById('messageList');
+            initialMessages.forEach(message => {
+                addMessage(message.author, message.content, message.time);
+            });
+            
+            // 初始化装饰物
+            const decorationsContainer = document.getElementById('decorationsContainer');
+            decorations.forEach(emoji => {
+                const item = document.createElement('div');
+                item.className = 'decoration-item';
+                item.innerHTML = emoji;
+                item.title = '点击添加到小屋';
+                item.addEventListener('click', function() {
+                    // 切换选中状态
+                    document.querySelectorAll('.decoration-item').forEach(el => {
+                        el.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                    
+                    // 添加装饰到小屋
+                    addDecorationToCottage(emoji);
+                });
+                decorationsContainer.appendChild(item);
+            });
+            
+            // 初始化照片墙
+            const photoGrid = document.getElementById('photoGrid');
+            for (let i = 0; i < 9; i++) {
+                const photoItem = document.createElement('div');
+                photoItem.className = 'photo-item';
+                photoItem.style.background = getRandomColor();
+                photoItem.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; font-size: 2rem;">${initialPhotos[i] || '📷'}</div>`;
+                photoGrid.appendChild(photoItem);
+            }
+            
+            // 留言表单提交
+            document.getElementById('messageForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const author = document.getElementById('authorName').value;
+                const content = document.getElementById('messageContent').value;
+                
+                if (author && content) {
+                    const now = new Date();
+                    const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                    addMessage(author, content, timeStr);
+                    
+                    // 清空表单
+                    document.getElementById('authorName').value = '';
+                    document.getElementById('messageContent').value = '';
+                    
+                    showNotification('留言发布成功！💌');
+                }
+            });
+            
+            // 照片上传
+            const uploadArea = document.getElementById('uploadArea');
+            const photoUpload = document.getElementById('photoUpload');
+            
+            uploadArea.addEventListener('click', function() {
+                photoUpload.click();
+            });
+            
+            photoUpload.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        addPhoto(event.target.result);
+                        showNotification('照片上传成功！📸');
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                    
+                    e.target.value = '';
+                }
+            });
+            
+            // 拖拽上传
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.background = '#e0f7ff';
+                this.style.borderColor = '#7bdff2';
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                this.style.background = '#f0faff';
+                this.style.borderColor = '#7bdff2';
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.background = '#f0faff';
+                this.style.borderColor = '#7bdff2';
+                
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        addPhoto(event.target.result);
+                        showNotification('照片上传成功！📸');
+                    };
+                    reader.readAsDataURL(e.dataTransfer.files[0]);
+                }
+            });
+        });
+        
+        // 添加留言
+        function addMessage(author, content, time) {
+            const messageList = document.getElementById('messageList');
+            const messageItem = document.createElement('div');
+            messageItem.className = 'message-item';
+            messageItem.innerHTML = `
+                <div class="message-author">
+                    <span>${author}</span>
+                    <span style="font-size: 0.9rem; opacity: 0.7;">${time}</span>
+                </div>
+                <div class="message-content">${content}</div>
+            `;
+            messageList.prepend(messageItem);
+            
+            // 自动滚动到最新留言
+            messageList.scrollTop = 0;
+        }
+        
+        // 添加照片
+        function addPhoto(imageData) {
+            const photoGrid = document.getElementById('photoGrid');
+            const photoItem = document.createElement('div');
+            photoItem.className = 'photo-item';
+            photoItem.innerHTML = `<img src="${imageData}" alt="上传的照片">`;
+            
+            // 点击放大查看
+            photoItem.addEventListener('click', function() {
+                const modal = document.createElement('div');
+                modal.style.position = 'fixed';
+                modal.style.top = '0';
+                modal.style.left = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.background = 'rgba(0,0,0,0.8)';
+                modal.style.display = 'flex';
+                modal.style.justifyContent = 'center';
+                modal.style.alignItems = 'center';
+                modal.style.zIndex = '1000';
+                
+                const modalImg = document.createElement('img');
+                modalImg.src = imageData;
+                modalImg.style.maxWidth = '90%';
+                modalImg.style.maxHeight = '90%';
+                modalImg.style.borderRadius = '10px';
+                modalImg.style.boxShadow = '0 0 30px rgba(255,255,255,0.2)';
+                
+                modal.appendChild(modalImg);
+                modal.addEventListener('click', function() {
+                    document.body.removeChild(modal);
+                });
+                
+                document.body.appendChild(modal);
+            });
+            
+            photoGrid.prepend(photoItem);
+        }
+        
+        // 添加装饰到小屋
+        function addDecorationToCottage(emoji) {
+            const header = document.querySelector('.cottage-header');
+            
+            const decoration = document.createElement('div');
+            decoration.className = 'floating-decoration';
+            decoration.innerHTML = emoji;
+            decoration.style.position = 'absolute';
+            decoration.style.fontSize = '2rem';
+            decoration.style.cursor = 'grab';
+            decoration.style.userSelect = 'none';
+            decoration.style.zIndex = '10';
+            
+            // 随机位置
+            const maxX = header.offsetWidth - 50;
+            const maxY = header.offsetHeight - 50;
+            const x = Math.floor(Math.random() * maxX);
+            const y = Math.floor(Math.random() * maxY);
+            
+            decoration.style.left = `${x}px`;
+            decoration.style.top = `${y}px`;
+            
+            // 可拖动
+            makeDraggable(decoration);
+            
+            // 双击删除
+            decoration.addEventListener('dblclick', function() {
+                this.remove();
+                showNotification('装饰已移除 ✨');
+            });
+            
+            header.appendChild(decoration);
+            showNotification(`添加了 ${emoji} 装饰！`);
+        }
+        
+        // 使元素可拖动
+        function makeDraggable(element) {
+            let isDragging = false;
+            let offsetX, offsetY;
+            
+            element.addEventListener('mousedown', startDrag);
+            element.addEventListener('touchstart', startDrag);
+            
+            function startDrag(e) {
+                isDragging = true;
+                const clientX = e.clientX || e.touches[0].clientX;
+                const clientY = e.clientY || e.touches[0].clientY;
+                const rect = element.getBoundingClientRect();
+                offsetX = clientX - rect.left;
+                offsetY = clientY - rect.top;
+                element.style.cursor = 'grabbing';
+                element.style.zIndex = '100';
+                
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('touchmove', drag);
+                document.addEventListener('mouseup', stopDrag);
+                document.addEventListener('touchend', stopDrag);
+                
+                e.preventDefault();
+            }
+            
+            function drag(e) {
+                if (!isDragging) return;
+                
+                const clientX = e.clientX || e.touches[0].clientX;
+                const clientY = e.clientY || e.touches[0].clientY;
+                const parentRect = element.parentNode.getBoundingClientRect();
+                
+                let x = clientX - parentRect.left - offsetX;
+                let y = clientY - parentRect.top - offsetY;
+                
+                // 限制在父元素内
+                x = Math.max(0, Math.min(x, parentRect.width - element.offsetWidth));
+                y = Math.max(0, Math.min(y, parentRect.height - element.offsetHeight));
+                
+                element.style.left = `${x}px`;
+                element.style.top = `${y}px`;
+            }
+            
+            function stopDrag() {
+                isDragging = false;
+                element.style.cursor = 'grab';
+                element.style.zIndex = '10';
+                
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('touchmove', drag);
+                document.removeEventListener('mouseup', stopDrag);
+                document.removeEventListener('touchend', stopDrag);
+            }
+        }
+        
+        // DIY功能
+        function changeBackground() {
+            const backgrounds = [
+                'linear-gradient(135deg, #fff8f0 0%, #ffecf1 100%)',
+                'linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%)',
+                'linear-gradient(135deg, #f3e5f5 0%, #e8f5e9 100%)',
+                'linear-gradient(135deg, #fff3e0 0%, #e0f7fa 100%)',
+                'linear-gradient(135deg, #fce4ec 0%, #f3e5f5 100%)'
+            ];
+            
+            const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+            document.body.style.background = randomBg;
+            showNotification('更换了背景主题！🎨');
+        }
+        
+        function addSticker() {
+            const stickers = ['💕', '✨', '🌟', '🌸', '🐱', '🐶', '🦄', '🍦'];
+            const randomSticker = stickers[Math.floor(Math.random() * stickers.length)];
+            
+            const sticker = document.createElement('div');
+            sticker.textContent = randomSticker;
+            sticker.style.position = 'fixed';
+            sticker.style.fontSize = `${Math.random() * 40 + 20}px`;
+            sticker.style.left = `${Math.random() * 80 + 10}vw`;
+            sticker.style.top = `${Math.random() * 80 + 10}vh`;
+            sticker.style.opacity = '0.3';
+            sticker.style.pointerEvents = 'none';
+            sticker.style.zIndex = '-1';
+            sticker.style.animation = `float ${Math.random() * 10 + 10}s infinite ease-in-out`;
+            
+            // 添加浮动动画
+            if (!document.querySelector('#float-animation')) {
+                const style = document.createElement('style');
+                style.id = 'float-animation';
+                style.textContent = `
+                    @keyframes float {
+                        0%, 100% { transform: translate(0, 0) rotate(0deg); }
+                        25% { transform: translate(${Math.random() * 20 - 10}px, ${Math.random() * 20 - 10}px) rotate(${Math.random() * 20 - 10}deg); }
+                        50% { transform: translate(${Math.random() * 20 - 10}px, ${Math.random() * 20 - 10}px) rotate(${Math.random() * 20 - 10}deg); }
+                        75% { transform: translate(${Math.random() * 20 - 10}px, ${Math.random() * 20 - 10}px) rotate(${Math.random() * 20 - 10}deg); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(sticker);
+            showNotification('添加了浮动贴纸！✨');
+        }
+        
+        function saveCottage() {
+            // 在实际应用中，这里可以实现截图功能
+            // 现在用模拟保存提示
+            showNotification('小屋布局已保存到本地！💾');
+            
+            // 模拟下载
+            setTimeout(() => {
+                const link = document.createElement('a');
+                link.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent('爱的小屋保存数据 - ' + new Date().toLocaleString());
+                link.download = '爱的小屋保存.txt';
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }, 500);
+        }
+        
+        function resetCottage() {
+            if (confirm('确定要重置小屋吗？这会清除所有装饰和贴纸。')) {
+                // 移除所有装饰
+                document.querySelectorAll('.floating-decoration').forEach(el => el.remove());
+                
+                // 移除所有贴纸
+                document.querySelectorAll('div[style*="float"]').forEach(el => {
+                    if (el.style.animation.includes('float')) el.remove();
+                });
+                
+                // 重置背景
+                document.body.style.background = 'linear-gradient(135deg, #fff8f0 0%, #ffecf1 100%)';
+                
+                showNotification('小屋已重置！🔄');
+            }
+        }
+        
+        // 工具函数
+        function getRandomColor() {
+            const colors = ['#ff7eb3', '#7bdff2', '#ffd166', '#9d4edd', '#ff9e6d', '#6bdea6'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+        
+        function showNotification(message) {
+            // 移除现有的通知
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
+            
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.background = 'linear-gradient(135deg, #ff7eb3, #ff5c9d)';
+            notification.style.color = 'white';
+            notification.style.padding = '15px 25px';
+            notification.style.borderRadius = '10px';
+            notification.style.boxShadow = '0 5px 20px rgba(255, 126, 179, 0.3)';
+            notification.style.zIndex = '1000';
+            notification.style.fontWeight = 'bold';
+            notification.style.animation = 'slideIn 0.3s ease-out';
+            
+            // 添加动画
+            if (!document.querySelector('#notif-animation')) {
+                const style = document.createElement('style');
+                style.id = 'notif-animation';
+                style.textContent = `
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes fadeOut {
+                        from { opacity: 1; }
+                        to { opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(notification);
+            
+            // 3秒后自动消失
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
